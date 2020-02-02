@@ -1,11 +1,13 @@
 #include <nori/integrator.h>
+#include <nori/scene.h>
+
 NORI_NAMESPACE_BEGIN
 class NormalIntegrator : public Integrator {
     public:
     NormalIntegrator(const PropertyList& props)
     {
-        m_myproperty = props.getString("myProperty");
-        std::cout << "Para values = " << m_myproperty << "\n";
+//        m_myproperty = props.getString("myProperty");
+//        std::cout << "Para values = " << m_myproperty << "\n";
     }
 
     Color3f Li(const Scene* scene, Sampler* sampler, const Ray3f& ray) const
@@ -21,12 +23,13 @@ class NormalIntegrator : public Integrator {
     }
     std::string toString() const
     {
-        return tfm::format(
-            "NormalIntegrator[\n"
-            " myProperty = \"%s\"\n"
-            "]",
-            m_myproperty
-        );
+//        return tfm::format(
+//            "NormalIntegrator[\n"
+//            " myProperty = \"%s\"\n"
+//            "]",
+//            m_myproperty
+//        );
+		return "NormalIntegrator[]";
     }
     protected:
     std::string m_myproperty;
