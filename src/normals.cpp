@@ -10,7 +10,14 @@ class NormalIntegrator : public Integrator {
 
     Color3f Li(const Scene* scene, Sampler* sampler, const Ray3f& ray) const
     {
-        return Color3f(0, 1, 0);
+        Intersection its;
+        if (!scene->rayIntersect(ray, its))
+            return Color3f(0.0f);
+
+        /* Return the component-wise absolute
+           value of the shading normal as a color */
+        Normal3f n = its.shFrame.n.cwiseAbs();
+        return Color3f(n.x(), n.y(), n.z());
     }
     std::string toString() const
     {
