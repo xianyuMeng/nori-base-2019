@@ -4,8 +4,8 @@ class NormalIntegrator : public Integrator {
     public:
     NormalIntegrator(const PropertyList& props)
     {
-        m_myproperty = props.getString('myProperty');
-        std::cout << "Para values = " << m_my_property << "\n";
+        m_myproperty = props.getString("myProperty");
+        std::cout << "Para values = " << m_myproperty << "\n";
     }
 
     Color3f Li(const Scene* scene, Sampler* sampler, const Ray3f& ray) const
@@ -23,5 +23,8 @@ class NormalIntegrator : public Integrator {
     }
     protected:
     std::string m_myproperty;
-}
+};
+
+NORI_REGISTER_CLASS(NormalIntegrator, "normals");
+NORI_NAMESPACE_END
 

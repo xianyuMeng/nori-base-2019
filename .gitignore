@@ -20,5 +20,6 @@ rules.ninja
 *.sln
 *.dir
 *.opendb
+*.swp
 Debug
 x64
