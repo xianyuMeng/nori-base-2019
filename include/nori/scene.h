@@ -19,7 +19,7 @@
 #pragma once
 
 #include <nori/accel.h>
-
+#include <nori/octreenode.h>
 NORI_NAMESPACE_BEGIN
 
 /**
@@ -122,6 +122,7 @@ private:
     Sampler *m_sampler = nullptr;
     Camera *m_camera = nullptr;
     Accel *m_accel = nullptr;
+    OctreeBaseNode* m_root = nullptr;
 };
 
 NORI_NAMESPACE_END
