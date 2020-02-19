@@ -9,12 +9,20 @@ NORI_NAMESPACE_BEGIN
 class OctreeBaseNode
 {
    public:
-   OctreeBaseNode(){
+   OctreeBaseNode()
+   {
+       for(size_t i = 0; i < 8; ++i)
+       {
+           this->children[i] = nullptr;
+       }
    } 
    virtual ~OctreeBaseNode(){};   
    OctreeBaseNode* children[8];
+   OctreeBaseNode* parent = nullptr;
    BoundingBox3f m_bbox;
-
+   std::vector<int> m_triangle_idx;
+   int child_id = 0;
+   bool visited = false;
 };
 
 //OctreeBaseNode::~OctreeBaseNode()
@@ -33,9 +41,10 @@ class OctreeNode : public OctreeBaseNode
 {
     public:
     
-    OctreeNode(const BoundingBox3f& bbox)
+    OctreeNode(const BoundingBox3f& bbox, std::vector<int>& triangle_idx)
     {
         m_bbox = bbox;
+        m_triangle_idx = triangle_idx;
         this->init_child();
     }
     void init_child()
@@ -55,7 +64,7 @@ class OctreeNode : public OctreeBaseNode
                 delete this->children[i];
             }
         } 
-        //fprintf(stdout, "OctreeNode deleted\n");
+        fprintf(stdout, "OctreeNode deleted\n");
     }
 
 };
@@ -64,17 +73,17 @@ class OctreeNode : public OctreeBaseNode
 class OctreeLeaf : public  OctreeBaseNode
 {
     public:
-    OctreeLeaf(const BoundingBox3f& bbox, std::vector<int>& triangle_idx):
-    triangle_idx(triangle_idx)
+    OctreeLeaf(const BoundingBox3f& bbox, std::vector<int>& triangle_idx)
     {
         m_bbox = bbox;
+        m_triangle_idx = triangle_idx;
     }
     ~OctreeLeaf()
     {
-        //fprintf(stdout, "OctreeLeaf deleted\n");
+        fprintf(stdout, "OctreeLeaf deleted\n");
     }
 
-    std::vector<int> triangle_idx;
+    //std::vector<int> triangle_idx;
 };
 
 NORI_NAMESPACE_END
