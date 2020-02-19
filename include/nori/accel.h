@@ -44,6 +44,7 @@ public:
     void build();
 
     unsigned int MIN_TRI = 20;
+    int MAX_DEPTH = 16;
     int total_leaf = 0;
     int total_interior = 0; 
     
@@ -66,7 +67,6 @@ public:
         if(triangle_idx.size() < MIN_TRI)
         {
             OctreeBaseNode* node = new OctreeLeaf(bbox, triangle_idx);
-            node->visited = true;
             (*leaf)++;
             return node;
         }
@@ -85,7 +85,7 @@ public:
                 dfs_stack.pop();
                 continue;
             }
-            if(top->m_triangle_idx.size() < MIN_TRI)
+            if(top->m_triangle_idx.size() < MIN_TRI || top->depth > MAX_DEPTH)
             {
                 //this is a leaf node
                 OctreeBaseNode* node = new OctreeLeaf(top->m_bbox, top->m_triangle_idx);
@@ -95,6 +95,7 @@ public:
                 top->parent->children[top->child_id] = node;
                 node->parent = top->parent;
                 node->child_id = top->child_id;
+                node->depth = top->depth;
                 top->m_triangle_idx.clear();
                 top->m_triangle_idx.shrink_to_fit();
                 dfs_stack.pop();
@@ -122,9 +123,10 @@ public:
             {
                 OctreeBaseNode* n = new OctreeNode(sub_bbox[i], triangle_list[i]);
                 (*interior)++;
-                fprintf(stdout, "interior node; tri %ld; leaf %d; interior %d\n", triangle_list[i].size(), (*leaf), (*interior));
+                fprintf(stdout, "interior node %d; tri %ld; leaf %d; interior %d\n", i, triangle_list[i].size(), (*leaf), (*interior));
                 n->child_id = i;
                 n->parent = top;
+                n->depth = top->depth + 1;
                 top->children[i] = n;
                 dfs_stack.push(n);
             }

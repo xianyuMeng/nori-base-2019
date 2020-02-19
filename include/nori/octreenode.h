@@ -22,7 +22,7 @@ class OctreeBaseNode
    BoundingBox3f m_bbox;
    std::vector<int> m_triangle_idx;
    int child_id = 0;
-   bool visited = false;
+   int depth = 0;
 };
 
 //OctreeBaseNode::~OctreeBaseNode()
