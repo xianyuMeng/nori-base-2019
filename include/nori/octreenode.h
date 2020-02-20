@@ -23,6 +23,7 @@ class OctreeBaseNode
    std::vector<int> m_triangle_idx;
    int child_id = 0;
    int depth = 0;
+   bool visited = false;
 };
 
 //OctreeBaseNode::~OctreeBaseNode()
@@ -64,7 +65,7 @@ class OctreeNode : public OctreeBaseNode
                 delete this->children[i];
             }
         } 
-        fprintf(stdout, "OctreeNode deleted\n");
+        //fprintf(stdout, "OctreeNode deleted\n");
     }
 
 };
@@ -80,7 +81,14 @@ class OctreeLeaf : public  OctreeBaseNode
     }
     ~OctreeLeaf()
     {
-        fprintf(stdout, "OctreeLeaf deleted\n");
+        //fprintf(stdout, "OctreeLeaf deleted\n");
+        for(size_t i = 0; i < 8; ++i)
+        {
+            if(this->children[i])
+            {
+                fprintf(stdout, "WTF\n");
+            }
+        }
     }
 
     //std::vector<int> triangle_idx;

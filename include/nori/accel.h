@@ -43,7 +43,7 @@ public:
     /// Build the acceleration data structure (currently a no-op)
     void build();
 
-    unsigned int MIN_TRI = 20;
+    unsigned int MIN_TRI = 16;
     int MAX_DEPTH = 16;
     int total_leaf = 0;
     int total_interior = 0; 
@@ -57,13 +57,23 @@ public:
             this->triangle_idx.push_back(i); 
         }
     }
+
+    bool checkLeaf(const OctreeBaseNode* node) const
+    {
+        //check node {leaf, interior}
+        bool res = false;
+        for(size_t i = 0; i < 8; ++i)
+        {
+            if(node->children[i])
+            {
+                res = true;
+            }
+        }
+        return !res;
+    }
     OctreeBaseNode* build(const BoundingBox3f& bbox, std::vector<int>& triangle_idx, int* leaf, int* interior)
     {
         fprintf(stdout, "leaf %d; node %d\n", (*leaf), (*interior));
-        if(triangle_idx.size() == 0)
-        {
-            return nullptr;
-        }
         if(triangle_idx.size() < MIN_TRI)
         {
             OctreeBaseNode* node = new OctreeLeaf(bbox, triangle_idx);
@@ -72,71 +82,65 @@ public:
         }
         OctreeBaseNode* root = new OctreeNode(bbox, triangle_idx);
         std::stack<OctreeBaseNode*> dfs_stack;
-        (*interior)++;
         dfs_stack.push(root);
-
+        (*interior)++;
         while(!dfs_stack.empty())
         {
-            OctreeBaseNode* top = dfs_stack.top();
-            if(top->m_triangle_idx.size() == 0)
+            auto top = dfs_stack.top();
+            if(top->m_triangle_idx.size() == 0 || top->visited)
             {
-                //this is a processed interior node
-                fprintf(stdout, "no triangle; leaf %d; interior %d\n", (*leaf), (*interior));
                 dfs_stack.pop();
                 continue;
             }
-            if(top->m_triangle_idx.size() < MIN_TRI || top->depth > MAX_DEPTH)
+            if(top->m_triangle_idx.size() < MIN_TRI ||
+            (top->parent && top->parent->depth > MAX_DEPTH))
             {
-                //this is a leaf node
-                OctreeBaseNode* node = new OctreeLeaf(top->m_bbox, top->m_triangle_idx);
-                (*leaf)++;
-                (*interior)--;
-                //replace OctreeNode with OctreeLeaf
-                top->parent->children[top->child_id] = node;
-                node->parent = top->parent;
-                node->child_id = top->child_id;
-                node->depth = top->depth;
+                // this is a leaf node     
+                OctreeBaseNode* leaf = new OctreeLeaf(top->m_bbox, top->m_triangle_idx);
+                leaf->depth = top->depth;
+                leaf->child_id = top->child_id;
+                assert(leaf->depth == top->parent->depth + 1);
+                if(top->parent)
+                {
+                    top->parent->children[top->child_id] = leaf;
+                }
+                else fprintf(stdout, "WTF\n");
                 top->m_triangle_idx.clear();
                 top->m_triangle_idx.shrink_to_fit();
                 dfs_stack.pop();
-                delete top;
-                fprintf(stdout, "leaf node; leaf %d; interior %d\n", (*leaf), (*interior));
                 continue;
             }
-            
-            std::vector<int> triangle_list[8];
+            std::vector<int> triangle_list[8]; 
             BoundingBox3f sub_bbox[8];
             calSubBox(top->m_bbox, sub_bbox);
-
             for(size_t i = 0; i < top->m_triangle_idx.size(); ++i)
             {
-                BoundingBox3f box = m_mesh->getBoundingBox(top->m_triangle_idx[i]);
+                const auto &box = m_mesh->getBoundingBox(top->m_triangle_idx[i]);
                 for(size_t j = 0; j < 8; ++j)
                 {
-                    if(box.overlaps(sub_bbox[j]))
+                    if(sub_bbox[j].overlaps(box))
                     {
                         triangle_list[j].push_back(top->m_triangle_idx[i]);
                     }
                 }
-            }  
+            }
             for(size_t i = 0; i < 8; ++i)
             {
                 OctreeBaseNode* n = new OctreeNode(sub_bbox[i], triangle_list[i]);
-                (*interior)++;
-                fprintf(stdout, "interior node %d; tri %ld; leaf %d; interior %d\n", i, triangle_list[i].size(), (*leaf), (*interior));
                 n->child_id = i;
                 n->parent = top;
                 n->depth = top->depth + 1;
                 top->children[i] = n;
+                (*interior)++;
                 dfs_stack.push(n);
             }
-            
+            top->visited = true;
             top->m_triangle_idx.clear();
             top->m_triangle_idx.shrink_to_fit();
-        
-        }
 
+        }
         return root;
+//        return root;
         //recursive version
         //std::vector<int> triangle_list[8];
         //BoundingBox3f sub_bbox[8];
@@ -154,10 +158,11 @@ public:
         //    }
         //}       
         //(*interior)++;
-        //OctreeBaseNode* node = new OctreeNode(bbox);
+        //OctreeBaseNode* node = new OctreeNode(bbox, triangle_idx);
         //for(size_t i = 0; i < 8; ++i)
         //{
         //    node->children[i] = this->build(sub_bbox[i], triangle_list[i], leaf, interior);
+        //    node->children[i]->depth = node->depth + 1;
         //}
         //return node;
     }
@@ -201,7 +206,9 @@ public:
      *
      * \return \c true if an intersection was found
      */
-    bool rayIntersect(const Ray3f &ray, Intersection &its, bool shadowRay) const;
+    bool rayIntersect(const Ray3f& ray, Intersection& its, bool shadowray) const; 
+    bool rayIntersect(const Ray3f &ray, Intersection &its, bool shadowRay, OctreeBaseNode* root) const;
+    
 
 private:
     Mesh         *m_mesh = nullptr; ///< Mesh (only a single one for now)

@@ -42,7 +42,7 @@ void Scene::activate() {
     //m_accel->build();
     m_accel->init_triangle_idx(m_accel->getTriCount());
     m_root = m_accel->build(m_accel->getBoundingBox(), m_accel->triangle_idx, &(m_accel->total_leaf), &(m_accel->total_interior));
-
+   
 
     if (!m_integrator)
         throw NoriException("No integrator was specified!");
