@@ -44,7 +44,7 @@ public:
     void build();
 
     unsigned int MIN_TRI = 16;
-    int MAX_DEPTH = 16;
+    int MAX_DEPTH = 8;
     int total_leaf = 0;
     int total_interior = 0; 
     
@@ -96,13 +96,15 @@ public:
             (top->parent && top->parent->depth > MAX_DEPTH))
             {
                 // this is a leaf node     
-                OctreeBaseNode* leaf = new OctreeLeaf(top->m_bbox, top->m_triangle_idx);
-                leaf->depth = top->depth;
-                leaf->child_id = top->child_id;
-                assert(leaf->depth == top->parent->depth + 1);
+                OctreeBaseNode* leaf_node = new OctreeLeaf(top->m_bbox, top->m_triangle_idx);
+                leaf_node->depth = top->depth;
+                leaf_node->child_id = top->child_id;
+                (*leaf)++;
+                (*interior)--;
+                assert(leaf_node->depth == top->parent->depth + 1);
                 if(top->parent)
                 {
-                    top->parent->children[top->child_id] = leaf;
+                    top->parent->children[top->child_id] = leaf_node;
                 }
                 else fprintf(stdout, "WTF\n");
                 top->m_triangle_idx.clear();
@@ -139,6 +141,7 @@ public:
             top->m_triangle_idx.shrink_to_fit();
 
         }
+        fprintf(stdout, "leaf %d; interior %d;\n", (*leaf), (*interior));
         return root;
 //        return root;
         //recursive version
