@@ -46,26 +46,52 @@ bool Accel::rayIntersect(
     std::stack<OctreeBaseNode*> dfs_stack;
     std::vector<OctreeBaseNode*> leaf_nodes;
     dfs_stack.push(node);
+
+    float curT = std::numeric_limits<float>::max();
+
     while(!dfs_stack.empty())
     {
         auto top = dfs_stack.top();
-        dfs_stack.pop(); 
-        if(top->m_bbox.rayIntersect(ray))
+        dfs_stack.pop();
+        if(checkLeaf(top) && top->m_triangle_idx.size() > 0)
         {
-            if(checkLeaf(top) && top->m_triangle_idx.size() > 0)
-            {
-                leaf_nodes.push_back(top);
-            } 
+            leaf_nodes.push_back(top);
         }
-
         for(size_t i = 0; i < 8; ++i)
         {
             if(top->children[i])
             {
-                dfs_stack.push(top->children[i]);
+                float tt1, tt2;
+                if(top->children[i]->m_bbox.rayIntersect(ray, tt1, tt2))
+                {
+                    if(tt1 < curT)
+                    {
+                        dfs_stack.push(top->children[i]);
+                    }
+                }
             }
         }
     }
+    //while(!dfs_stack.empty())
+    //{
+    //    auto top = dfs_stack.top();
+    //    dfs_stack.pop(); 
+    //    if(top->m_bbox.rayIntersect(ray))
+    //    {
+    //        if(checkLeaf(top) && top->m_triangle_idx.size() > 0)
+    //        {
+    //            leaf_nodes.push_back(top);
+    //        } 
+    //    }
+
+    //    for(size_t i = 0; i < 8; ++i)
+    //    {
+    //        if(top->children[i])
+    //        {
+    //            dfs_stack.push(top->children[i]);
+    //        }
+    //    }
+    //}
     
     for(size_t i = 0; i < leaf_nodes.size(); ++i)
     {
