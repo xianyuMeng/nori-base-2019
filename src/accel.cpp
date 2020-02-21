@@ -44,10 +44,10 @@ bool Accel::rayIntersect(
 
     OctreeBaseNode* node = root;
     std::stack<OctreeBaseNode*> dfs_stack;
-    std::vector<OctreeBaseNode*> leaf_nodes;
+    std::vector<std::pair<OctreeBaseNode*, float>> leaf_nodes;
     dfs_stack.push(node);
 
-    float curT = std::numeric_limits<float>::max();
+//    float curT = std::numeric_limits<float>::max();
 
     while(!dfs_stack.empty())
     {
@@ -55,19 +55,17 @@ bool Accel::rayIntersect(
         dfs_stack.pop();
         if(checkLeaf(top) && top->m_triangle_idx.size() > 0)
         {
-            leaf_nodes.push_back(top);
+            float tt1, tt2;
+            top->m_bbox.rayIntersect(ray, tt1, tt2);
+            leaf_nodes.push_back(std::make_pair(top, tt1));
         }
         for(size_t i = 0; i < 8; ++i)
         {
             if(top->children[i])
             {
-                float tt1, tt2;
-                if(top->children[i]->m_bbox.rayIntersect(ray, tt1, tt2))
+                if(top->children[i]->m_bbox.rayIntersect(ray))
                 {
-                    if(tt1 < curT)
-                    {
-                        dfs_stack.push(top->children[i]);
-                    }
+                    dfs_stack.push(top->children[i]);
                 }
             }
         }
@@ -92,23 +90,77 @@ bool Accel::rayIntersect(
     //        }
     //    }
     //}
-    
-    for(size_t i = 0; i < leaf_nodes.size(); ++i)
-    {
-        for(size_t j = 0; j < leaf_nodes[i]->m_triangle_idx.size(); ++j)
+
+    struct{
+        bool operator()(const std::pair<OctreeBaseNode*, float>& a, const std::pair<OctreeBaseNode*, float>& b) const
         {
-            float u, v, t;
-            if(m_mesh->rayIntersect(leaf_nodes[i]->m_triangle_idx[j], ray, u, v, t))
-            {
-                if(shadowRay) return true;
-                ray.maxt = its.t = t;
-                its.uv = Point2f(u, v);
-                its.mesh = m_mesh;
-                f = leaf_nodes[i]->m_triangle_idx[j];
-                foundIntersection = true;
-            }
+            return a < b;
         }
-    } 
+    }leafSort;
+    bool flag = false;
+    if(!leaf_nodes.empty())
+    {
+        std::sort(leaf_nodes.begin(), leaf_nodes.end(), leafSort);
+        while(!flag)
+        {
+            for(size_t i = 0; i < leaf_nodes.size(); ++i)
+            {
+                for(size_t j = 0; j < leaf_nodes[i].first->m_triangle_idx.size(); ++j)
+                {
+                    float u, v, t;
+                    if(m_mesh->rayIntersect(leaf_nodes[i].first->m_triangle_idx[j], ray, u, v, t))
+                    {
+                        if(shadowRay) return true;
+                        ray.maxt = its.t = t;
+                        its.uv = Point2f(u, v);
+                        its.mesh = m_mesh;
+                        f = leaf_nodes[i].first->m_triangle_idx[j];
+                        foundIntersection = true;
+                        flag = true;
+                        fprintf(stdout, "leaf %d; tri %d; tri id %d; t %f, box t %f;\n", i, j, f, t, leaf_nodes[i].second); 
+                        break;
+                    }
+                }
+            }
+            fprintf(stdout, "\t\n");
+            flag = true;
+        }
+   }
+    //if(!leaf_nodes.empty())
+    //{
+    //    std::sort(leaf_nodes.begin(), leaf_nodes.end(), leafSort); 
+    //    for(size_t j = 0; j < leaf_nodes[0].first->m_triangle_idx.size(); ++j)
+    //    {
+    //        float u, v, t;
+    //        if(m_mesh->rayIntersect(leaf_nodes[0].first->m_triangle_idx[j], ray, u, v, t))
+    //        {
+    //            if(shadowRay) return true;
+    //            ray.maxt = its.t = t;
+    //            its.uv = Point2f(u, v);
+    //            its.mesh = m_mesh;
+    //            f = leaf_nodes[0].first->m_triangle_idx[j];
+    //            foundIntersection = true;
+    //        }
+
+    //    }
+    
+    //}
+   //for(size_t i = 0; i < leaf_nodes.size(); ++i)
+    //{
+    //    for(size_t j = 0; j < leaf_nodes[i]->m_triangle_idx.size(); ++j)
+    //    {
+    //        float u, v, t;
+    //        if(m_mesh->rayIntersect(leaf_nodes[i]->m_triangle_idx[j], ray, u, v, t))
+    //        {
+    //            if(shadowRay) return true;
+    //            ray.maxt = its.t = t;
+    //            its.uv = Point2f(u, v);
+    //            its.mesh = m_mesh;
+    //            f = leaf_nodes[i]->m_triangle_idx[j];
+    //            foundIntersection = true;
+    //        }
+    //    }
+    //} 
     if (foundIntersection) {
         /* At this point, we now know that there is an intersection,
            and we know the triangle index of the closest such intersection.
