@@ -94,17 +94,16 @@ bool Accel::rayIntersect(
     struct{
         bool operator()(const std::pair<OctreeBaseNode*, float>& a, const std::pair<OctreeBaseNode*, float>& b) const
         {
-            return a < b;
+            return a.second < b.second;
         }
     }leafSort;
     bool flag = false;
     if(!leaf_nodes.empty())
     {
         std::sort(leaf_nodes.begin(), leaf_nodes.end(), leafSort);
-        while(!flag)
-        {
-            for(size_t i = 0; i < leaf_nodes.size(); ++i)
+            for(size_t i = 0; i < leaf_nodes.size() && !flag; ++i)
             {
+					//fprintf(stdout, "leaf %d; box t %f;\n", i, leaf_nodes[i].second);
                 for(size_t j = 0; j < leaf_nodes[i].first->m_triangle_idx.size(); ++j)
                 {
                     float u, v, t;
@@ -116,15 +115,13 @@ bool Accel::rayIntersect(
                         its.mesh = m_mesh;
                         f = leaf_nodes[i].first->m_triangle_idx[j];
                         foundIntersection = true;
-                        flag = true;
-                        fprintf(stdout, "leaf %d; tri %d; tri id %d; t %f, box t %f;\n", i, j, f, t, leaf_nodes[i].second); 
-                        break;
+						flag = true;
+                        //fprintf(stdout, "leaf %d; tri %d; tri id %d; t %f, box t %f;\n", i, j, f, t, leaf_nodes[i].second); 
                     }
                 }
             }
-            fprintf(stdout, "\t\n");
-            flag = true;
-        }
+            //fprintf(stdout, "\t\n");
+        
    }
     //if(!leaf_nodes.empty())
     //{
