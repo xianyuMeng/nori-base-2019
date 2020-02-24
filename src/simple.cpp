@@ -20,14 +20,14 @@ class SimpleIntegrator : public Integrator
         {
             return Color3f(0, 0, 0);
         }
-        Vector3f normal = its.shFrame.n;
+        Vector3f normal = its.shFrame.n.cwiseAbs();
         Point3f p = this->myPoint;
         Point3f x = its.p;
-        Point3f diff = x - p;
+        Point3f diff = p - x;
         float norm_diff = diff.x() * diff.x() + diff.y() * diff.y() + diff.z() * diff.z();
         diff = diff / std::sqrt(norm_diff);
-        float cos = std::acos(normal.x() * diff.x() + normal.y() * diff.y() + normal.z() * diff.z());
-        Ray3f vis(p, diff, 0, (x.x() - p.x()) / diff.x());
+        float cos = (normal.x() * diff.x() + normal.y() * diff.y() + normal.z() * diff.z());
+        Ray3f vis(x, diff, 0, (p.x() - x.x()) / diff.x());
         if(scene->rayIntersect(vis))
         {
             return Color3f(0, 0, 0);

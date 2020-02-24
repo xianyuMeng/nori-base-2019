@@ -109,7 +109,11 @@ bool Accel::rayIntersect(
                     float u, v, t;
                     if(m_mesh->rayIntersect(leaf_nodes[i].first->m_triangle_idx[j], ray, u, v, t))
                     {
-                        if(shadowRay) return true;
+                        if(shadowRay) 
+                        {
+                            foundIntersection = true;
+                            return true;
+                        }
                         ray.maxt = its.t = t;
                         its.uv = Point2f(u, v);
                         its.mesh = m_mesh;
