@@ -67,6 +67,7 @@ add_executable(nori
 
   # Source code files
   src/normals.cpp
+  src/simple.cpp
   src/bitmap.cpp
   src/block.cpp
   src/accel.cpp
