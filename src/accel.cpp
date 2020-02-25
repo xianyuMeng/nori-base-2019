@@ -104,7 +104,7 @@ bool Accel::rayIntersect(
             for(size_t i = 0; i < leaf_nodes.size() && !flag; ++i)
             {
 					//fprintf(stdout, "leaf %d; box t %f;\n", i, leaf_nodes[i].second);
-                for(size_t j = 0; j < leaf_nodes[i].first->m_triangle_idx.size(); ++j)
+                for(size_t j = 0; j < leaf_nodes[i].first->m_triangle_idx.size() && !flag; ++j)
                 {
                     float u, v, t;
                     if(m_mesh->rayIntersect(leaf_nodes[i].first->m_triangle_idx[j], ray, u, v, t))
