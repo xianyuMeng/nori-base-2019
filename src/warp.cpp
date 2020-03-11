@@ -92,32 +92,13 @@ float Warp::squareToUniformHemispherePdf(const Vector3f &v) {
 
 Vector3f Warp::squareToCosineHemisphere(const Point2f &sample) {
     //throw NoriException("Warp::squareToCosineHemisphere() is not yet implemented!");
-//    float phi = 2 * M_PI * sample.y();
-//    float theta = std::asin(sample.x()) / 2.0f;
-//    return Vector3f(
-//        std::sin(theta) * std::cos(phi),
-//        std::sin(theta) * std::sin(phi),
-//        std::cos(theta)
-//        );
-        float r1 = 2.0f * sample.x() - 1.0f;
-		float r2 = 2.0f * sample.y() - 1.0f;
-		float phi, r;
-		if (r1 == 0 && r2 == 0) {
-			r = phi = 0;
-		}
-		else if (r1 * r1 > r2 * r2) {
-			r = r1;
-			phi = (M_PI / 4.0f) * (r2 / r1);
-		}
-		else {
-			r = r2;
-			phi = (M_PI / 2.0f) - (r1 / r2) * (M_PI / 4.0f);
-		}
-		float cosPhi = std::cos(phi);
-		float sinPhi = std::sin(phi);
-		Vector2f t = Vector2f(r * cosPhi, r * sinPhi);
-		float z = std::sqrt(std::max(0.0f, 1.0f - t.x()*t.x() - t.y()*t.y()));
-		return Vector3f(t.x(), t.y(), z);
+        float phi = 2 * M_PI * sample.x();
+        float theta = std::acos(1 - 2 * sample.y()) / 2.0;
+        return Vector3f(
+            std::sin(theta) * std::cos(phi),
+            std::sin(theta) * std::sin(phi),
+            std::cos(theta)
+        );
 }
 
 float Warp::squareToCosineHemispherePdf(const Vector3f &v) {
@@ -128,11 +109,21 @@ float Warp::squareToCosineHemispherePdf(const Vector3f &v) {
 }
 
 Vector3f Warp::squareToBeckmann(const Point2f &sample, float alpha) {
-    throw NoriException("Warp::squareToBeckmann() is not yet implemented!");
+    //throw NoriException("Warp::squareToBeckmann() is not yet implemented!");
+    float phi = 2 * M_PI * sample.x();
+    float cos_squared_theta = 1.0f / (std::log(sample.y() + 1) * alpha * alpha + 1.0f);
+    return Vector3f(
+        std::sqrt(1 - cos_squared_theta) * std::cos(phi),
+        std::sqrt(1 - cos_squared_theta) * std::cos(phi),
+        std::sqrt(cos_squared_theta)
+    );
 }
 
-float Warp::squareToBeckmannPdf(const Vector3f &m, float alpha) {
-    throw NoriException("Warp::squareToBeckmannPdf() is not yet implemented!");
+float Warp::squareToBeckmannPdf(const Vector3f &v, float alpha) {
+    //throw NoriException("Warp::squareToBeckmannPdf() is not yet implemented!");
+    float theta = std::acos(v.z());
+    float r = std::sqrt(v.x() * v.x() + v.y() * v.y() + v.z() * v.z());
+    return (theta > M_PI / 2.0f || theta < 0.0f || r > 1.0f) ? 0.0f : std::cos(theta) / M_PI;
 }
 
 NORI_NAMESPACE_END
